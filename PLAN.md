@@ -152,6 +152,22 @@ pi-web-research-sandbox/
 - Verify that the `WebResearch` subagent cannot read `~/.pi/agent`, `~/.ssh`, or env vars.
 - Verify that the main agent refuses to use web data as arguments to `bash`/`write`/`edit`.
 
+## Future hardening
+
+1. **Mixed-script / homoglyph guard**
+   - Current NFKC normalization does not map Cyrillic/Greek look-alikes back to Latin.
+   - Add a Unicode confusables table (TR39) or mixed-script detection so that strings like `ignоre` (Cyrillic `о`) are caught before marker detection.
+   - Flag mixed-script fragments in `rejected_fragments` or normalize them to a canonical ASCII form.
+
+2. **Adversarial review committee (small LLM backstop)**
+   - Deterministic parsing can only catch patterns we know about.
+   - A prompt-injection can be written in any language the model understands, or encoded as Morse, Base64, rot13, leetspeak, etc.
+   - A secondary layer of small, cheap LLMs — local or via API — could review the extracted JSON (or raw text) for adversarial semantics before it reaches the main agent.
+   - This is a larger architectural change than the current deterministic extension; it should be opt-in and auditable.
+
+3. **Additional encoded-payload tests**
+   - Add fixtures for Base64, ROT13, Morse code, leetspeak, and multi-language injections to measure the deterministic sanitizer’s limits and the need for a semantic backstop.
+
 ## Next Session Instructions
 
 1. Open a new pi session in `/workspace/pi-web-research-sandbox`.
