@@ -23,9 +23,9 @@ Make web research in pi a deterministic, low-privilege subagent boundary. The we
 
 ## Plan
 
-### 1. Define a locked-down `Research` subagent type
+### 1. Define a locked-down `WebResearch` subagent type
 
-Create `.pi/agents/Research.md` with:
+Create `.pi/agents/WebResearch.md` with:
 
 - `tools: web_search, web_fetch` only (no `bash`, `write`, `edit`, `grep`, `find`, `ls`).
 - `prompt_mode: replace` so the subagent does not inherit the main agent's system prompt or mission.
@@ -73,7 +73,7 @@ pi.on("tool_result", async (event, ctx) => {
 
 This turns the raw web output into the structured JSON before the main LLM sees it.
 
-For high-risk or unknown URLs, the extension should instead spawn the `Research` subagent and return its JSON result.
+For high-risk or unknown URLs, the extension should instead spawn the `WebResearch` subagent and return its JSON result.
 
 ### 5. Spawn the research subagent in a sandbox
 
@@ -81,18 +81,18 @@ When the main agent needs to research an untrusted URL, use the `Agent` tool wit
 
 ```json
 {
-  "subagent_type": "Research",
+  "subagent_type": "WebResearch",
   "inherit_context": false,
   "isolated": true,
   "prompt": "Fetch <url> and return only the JSON schema..."
 }
 ```
 
-Then opt the `Research` agent type into worktree isolation by creating `.pi/subagents-worktrees.json`:
+Then opt the `WebResearch` agent type into worktree isolation by creating `.pi/subagents-worktrees.json`:
 
 ```json
 {
-  "worktreeAgents": ["Research"]
+  "worktreeAgents": ["WebResearch"]
 }
 ```
 
@@ -136,26 +136,26 @@ pi-web-research-sandbox/
 │   ├── settings.json            # project package list (gotgenes ecosystem)
 │   ├── subagents-worktrees.json # worktree isolation config
 │   ├── agents/
-│   │   └── Research.md          # locked-down subagent type
+│   │   └── WebResearch.md          # locked-down subagent type
 │   └── extensions/
 │       └── web-research-sandbox.ts  # main extension entry point
 └── src/
     ├── sanitizer.ts             # deterministic HTML -> JSON
     ├── schema.ts                # typebox schema for research output
-    └── subagent.ts              # Research subagent wrapper
+    └── subagent.ts              # WebResearch subagent wrapper
 ```
 
 ### 9. Testing
 
 - Build a test HTML page with prompt injection payloads (`ignore previous instructions`, fake `</system>` tags, unicode homoglyphs, hidden `display:none` text).
 - Verify that the raw text never appears in the main agent's context.
-- Verify that the `Research` subagent cannot read `~/.pi/agent`, `~/.ssh`, or env vars.
+- Verify that the `WebResearch` subagent cannot read `~/.pi/agent`, `~/.ssh`, or env vars.
 - Verify that the main agent refuses to use web data as arguments to `bash`/`write`/`edit`.
 
 ## Next Session Instructions
 
 1. Open a new pi session in `/workspace/pi-web-research-sandbox`.
-2. Trust the project when prompted so `.pi/settings.json`, `.pi/subagents-worktrees.json`, `.pi/agents/Research.md`, and `.pi/extensions/web-research-sandbox.ts` load; pi will install any missing packages from `.pi/settings.json`.
+2. Trust the project when prompted so `.pi/settings.json`, `.pi/subagents-worktrees.json`, `.pi/agents/WebResearch.md`, and `.pi/extensions/web-research-sandbox.ts` load; pi will install any missing packages from `.pi/settings.json`.
 3. Read `PLAN.md` and `README.md`.
 4. Start implementing `src/sanitizer.ts` and `src/schema.ts`, then wire them into `.pi/extensions/web-research-sandbox.ts`.
 5. Test with the prompt-injection fixtures before wiring it into the main agent path.

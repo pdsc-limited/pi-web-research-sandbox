@@ -10,13 +10,13 @@
 
 - Add a new Dockerfile argument for the repository and a pinned commit ref (e.g., `PI_WEB_RESEARCH_EXT_REPO` and `PI_WEB_RESEARCH_EXT_REF`).
 - Clone the repo into `/home/${USERNAME}/.pi/agent/extensions/web-research-sandbox`.
-- Copy `Research.md` from the cloned repo to `/home/${USERNAME}/.pi/agent/agents/Research.md`.
+- Copy `WebResearch.md` from the cloned repo to `/home/${USERNAME}/.pi/agent/agents/WebResearch.md`.
 - Copy `subagents-worktrees.json` from the cloned repo to `/home/${USERNAME}/.pi/agent/subagents-worktrees.json`.
 - Update `pi-agent-config/settings.json` with the new gotgenes versions and, if needed, a reference to the extension package so it is loaded.
 
 ## 1.5 Development phase (this container)
 
-Until the extension is published, development happens in `/workspace/pi-web-research-sandbox`. The gotgenes packages are already updated in the live global settings (`~/.pi/agent/settings.json`). The `.pi/subagents-worktrees.json` and `.pi/agents/Research.md` files in the project are used when the project is trusted in this container. No changes to `sane_config` are needed during this phase.
+Until the extension is published, development happens in `/workspace/pi-web-research-sandbox`. The gotgenes packages are already updated in the live global settings (`~/.pi/agent/settings.json`). The `.pi/subagents-worktrees.json` and `.pi/agents/WebResearch.md` files in the project are used when the project is trusted in this container. No changes to `sane_config` are needed during this phase.
 
 ## 2. Files to modify in `/workspace/sane_config`
 
@@ -25,10 +25,10 @@ Until the extension is published, development happens in `/workspace/pi-web-rese
 | `pi-agent-config/npm/package.json` | Pin the updated gotgenes extension versions and add `pi-subagents-worktrees`. |
 | `pi-agent-config/npm/package-lock.json` | Must be regenerated from the new `package.json`. |
 | `pi-agent-config/settings.json` | Add `pi-subagents-worktrees` **after** `pi-subagents`, update version pins, and add a reference to the published web-research extension package if pi does not auto-discover it. |
-| `Dockerfile` | After publication, clone the extension from GitHub and copy `subagents-worktrees.json` and `Research.md` into the image. |
+| `Dockerfile` | After publication, clone the extension from GitHub and copy `subagents-worktrees.json` and `WebResearch.md` into the image. |
 | `Makefile` | No code changes required, but build commands and docs must be exercised. |
-| `pi-agent-config/agents/Research.md` *(new)* | Provide the locked-down `Research` agent definition in the image. |
-| `pi-agent-config/subagents-worktrees.json` *(new)* | Opt the `Research` agent into git worktree isolation globally. |
+| `pi-agent-config/agents/WebResearch.md` *(new)* | Provide the locked-down `WebResearch` agent definition in the image. |
+| `pi-agent-config/subagents-worktrees.json` *(new)* | Opt the `WebResearch` agent into git worktree isolation globally. |
 | `AGENTS.md` / `README.md` | Document the new extension, the gotgenes version bump, and the lockfile update steps. |
 | `SUPPLY_CHAIN_SAFETY.md` | Consider noting the new package names under the age-gate policy. |
 
@@ -105,17 +105,17 @@ ARG PI_WEB_RESEARCH_EXT_REF=PINNED_COMMIT_OR_TAG
 RUN git clone --filter=blob:none ${PI_WEB_RESEARCH_EXT_REPO} /home/${USERNAME}/.pi/agent/extensions/web-research-sandbox \
     && cd /home/${USERNAME}/.pi/agent/extensions/web-research-sandbox \
     && git checkout ${PI_WEB_RESEARCH_EXT_REF}
-RUN cp /home/${USERNAME}/.pi/agent/extensions/web-research-sandbox/.pi/agents/Research.md \
-       /home/${USERNAME}/.pi/agent/agents/Research.md \
+RUN cp /home/${USERNAME}/.pi/agent/extensions/web-research-sandbox/.pi/agents/WebResearch.md \
+       /home/${USERNAME}/.pi/agent/agents/WebResearch.md \
     && cp /home/${USERNAME}/.pi/agent/extensions/web-research-sandbox/.pi/subagents-worktrees.json \
        /home/${USERNAME}/.pi/agent/subagents-worktrees.json
 ```
 
-If the `Research` agent definition should only be present when `INCLUDE_AGENT_CONFIGS=true`, copy it from the cloned repo conditionally instead of unconditionally.
+If the `WebResearch` agent definition should only be present when `INCLUDE_AGENT_CONFIGS=true`, copy it from the cloned repo conditionally instead of unconditionally.
 
-### 3.5 `pi-agent-config/agents/Research.md` *(new)*
+### 3.5 `pi-agent-config/agents/WebResearch.md` *(new)*
 
-Copy the current `Research.md` from `/workspace/pi-web-research-sandbox/.pi/agents/Research.md`. It should remain unchanged unless the new `pi-subagents@16.6.0` frontmatter format differs from the current one. Keep the `display_name: Research`, `tools: [web_search, web_fetch]`, `prompt_mode: replace`, and `permission` blocks.
+Copy the current `WebResearch.md` from `/workspace/pi-web-research-sandbox/.pi/agents/WebResearch.md`. It should remain unchanged unless the new `pi-subagents@16.6.0` frontmatter format differs from the current one. Keep the `display_name: WebResearch`, `tools: [web_search, web_fetch]`, `prompt_mode: replace`, and `permission` blocks.
 
 ### 3.6 `pi-agent-config/subagents-worktrees.json` *(new)*
 
@@ -123,11 +123,11 @@ Create with the same content as the project file:
 
 ```json
 {
-  "worktreeAgents": ["Research"]
+  "worktreeAgents": ["WebResearch"]
 }
 ```
 
-This opts the `Research` agent into git worktree isolation globally.
+This opts the `WebResearch` agent into git worktree isolation globally.
 
 ### 3.7 Web-research extension source location *(pre-publication)*
 
@@ -142,7 +142,7 @@ pi-web-research-sandbox/
 ├── PLAN.md
 ├── .pi/
 │   ├── agents/
-│   │   └── Research.md
+│   │   └── WebResearch.md
 │   ├── extensions/
 │   │   └── web-research-sandbox.ts
 │   └── subagents-worktrees.json
@@ -162,7 +162,7 @@ Add sections covering:
 - The new web-research extension and how it is loaded (git extension after publication).
 - The requirement that `pi-subagents` must be listed before `pi-subagents-worktrees` in `settings.json`.
 - The `subagents-worktrees.json` global config.
-- The fact that the `Research` agent is locked down to only `web_search` and `web_fetch`.
+- The fact that the `WebResearch` agent is locked down to only `web_search` and `web_fetch`.
 - Update the npm extension version list in the update workflow to include the worktree package.
 
 ### 3.9 `SUPPLY_CHAIN_SAFETY.md`
@@ -174,11 +174,11 @@ No required changes, but consider adding a note that the new gotgenes packages (
 | Artifact | Placement in container | How it gets there |
 |----------|------------------------|-------------------|
 | `web-research-sandbox.ts` + `src/` | `~/.pi/agent/extensions/web-research-sandbox/` | Cloned from the published GitHub repo |
-| `Research.md` | `~/.pi/agent/agents/Research.md` | Either via existing `INCLUDE_AGENT_CONFIGS` mechanism or an unconditional COPY |
+| `WebResearch.md` | `~/.pi/agent/agents/WebResearch.md` | Either via existing `INCLUDE_AGENT_CONFIGS` mechanism or an unconditional COPY |
 | `subagents-worktrees.json` | `~/.pi/agent/subagents-worktrees.json` (global) | New COPY step in Dockerfile |
 | `settings.json` | `~/.pi/agent/settings.json` | Existing COPY from `pi-agent-config/settings.json` |
 
-**Global vs. project config:** The `subagents-worktrees.json` should be global so the `Research` agent is isolated in any workspace the user opens. The project-level `.pi/subagents-worktrees.json` in `/workspace/pi-web-research-sandbox` is useful for development but is not baked into the image.
+**Global vs. project config:** The `subagents-worktrees.json` should be global so the `WebResearch` agent is isolated in any workspace the user opens. The project-level `.pi/subagents-worktrees.json` in `/workspace/pi-web-research-sandbox` is useful for development but is not baked into the image.
 
 ## 5. Lockfile and version-update workflow
 
@@ -215,18 +215,18 @@ No required changes, but consider adding a note that the new gotgenes packages (
 
 - Confirm `pi` starts without errors.
 - Confirm `/app/pi-test.sh list` shows all expected packages, including the web-research extension and `pi-subagents-worktrees`.
-- Spawn a `Research` subagent in a git-initialized workspace and verify it runs in a temporary worktree.
+- Spawn a `WebResearch` subagent in a git-initialized workspace and verify it runs in a temporary worktree.
 - Confirm the deterministic sanitizer returns only the JSON schema to the main agent.
 - Verify the main agent refuses to use web data as arguments to `bash`, `write`, or `edit`.
 
 ## 6. Risks and open questions
 
-1. **Gotgenes major-version jump.** `pi-subagents` goes from `7.5.1` to `16.6.0` and `pi-permission-system` from `7.3.1` to `14.0.0`. There may be frontmatter, API, or policy-format changes. The `Research.md` frontmatter and the `pi-permission-system` `config.json` must be tested after the container build.
-2. **Subagent harness instability.** The pi subagent/permission system currently has an internal bug (`registerSubagentSession`/`unregisterSubagentSession` is not a function), which prevented spawning a requirements-gathering subagent. This may also affect the `Research` subagent at runtime. The root cause should be confirmed before relying on the sandbox.
-3. **Git repo requirement.** Worktree isolation only works if the current project is a git repository with at least one commit. Users must be told to `git init && git commit` before using the `Research` agent, or the spawn will fail with *“not a git repo, no commits yet, or `git worktree add` failed.”*
+1. **Gotgenes major-version jump.** `pi-subagents` goes from `7.5.1` to `16.6.0` and `pi-permission-system` from `7.3.1` to `14.0.0`. There may be frontmatter, API, or policy-format changes. The `WebResearch.md` frontmatter and the `pi-permission-system` `config.json` must be tested after the container build.
+2. **Subagent harness instability.** The pi subagent/permission system currently has an internal bug (`registerSubagentSession`/`unregisterSubagentSession` is not a function), which prevented spawning a requirements-gathering subagent. This may also affect the `WebResearch` subagent at runtime. The root cause should be confirmed before relying on the sandbox.
+3. **Git repo requirement.** Worktree isolation only works if the current project is a git repository with at least one commit. Users must be told to `git init && git commit` before using the `WebResearch` agent, or the spawn will fail with *“not a git repo, no commits yet, or `git worktree add` failed.”*
 4. **Age gate timing.** `pi-subagents@16.6.0` and `pi-permission-system@14.0.0` were published on 2026-06-17. The container’s 3-day `min-release-age` gate means builds before 2026-06-20/21 may reject them. Schedule the first build accordingly, or temporarily override with `--min-release-age=0` only after verification.
 5. **Extension source imports.** The extension imports `src/sanitizer.ts`, `src/schema.ts`, and `src/subagent.ts`. Ensure the relative import paths work when the project is cloned to `~/.pi/agent/extensions/web-research-sandbox/`.
-6. **Permission-system policy.** The current `pi-permission-system` config allows almost everything. If the web-research feature is meant to enforce least privilege, the permission config should be reviewed and possibly tightened for `Research` agent operations.
+6. **Permission-system policy.** The current `pi-permission-system` config allows almost everything. If the web-research feature is meant to enforce least privilege, the permission config should be reviewed and possibly tightened for `WebResearch` agent operations.
 
 ## 7. Top 3 recommendations
 
