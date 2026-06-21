@@ -1,0 +1,24 @@
+{
+  "name": "pi-web-research-sandbox",
+  "version": "0.1.0",
+  "description": "Sandboxed, structured web research for the pi coding agent.",
+  "type": "module",
+  "license": "MIT",
+  "private": true,
+  "pi": {
+    "extensions": [
+      "./.pi/extensions/web-research-sandbox.ts"
+    ]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*"
+  },
+  "dependencies": {
+    "@sinclair/typebox": "0.34.49",
+    "cheerio": "^1.0.0",
+    "dompurify": "^3.0.0",
+    "isomorphic-dompurify": "^2.0.0",
+    "jsdom": "^24.0.0"
+  }
+}
