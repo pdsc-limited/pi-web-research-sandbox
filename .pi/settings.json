@@ -1,0 +1,9 @@
+{
+  "packages": [
+    "npm:@gotgenes/pi-permission-system@14.0.0",
+    "npm:@gotgenes/pi-subagents@16.6.0",
+    "npm:@gotgenes/pi-subagents-worktrees@0.2.3",
+    "npm:@aliou/pi-guardrails@0.13.1",
+    "npm:@juicesharp/rpiv-web-tools@1.16.1"
+  ]
+}
