@@ -8,39 +8,84 @@ By default, `rpiv-web-tools` returns raw web content as markdown directly into t
 
 This extension:
 
-- Spawns a dedicated `WebResearch` subagent with only `web_search` and `web_fetch` tools.
-- Forces the subagent to return a rigid JSON schema, not natural language.
-- Sanitizes fetched HTML deterministically before it crosses the trust boundary.
-- Keeps the research subagent out of the main agent's environment, secrets, and filesystem.
+- Intercepts `web_fetch` / `web_search` results and sanitizes them into rigid JSON before the main LLM sees them.
+- Flags high-risk URLs and tells the main agent to use the `WebResearch` subagent instead.
+- Provides a `WebResearch` subagent with only `web_search` and `web_fetch` tools, forced to return the same JSON schema.
+- Provides a lightweight `DocReader` subagent for searching local docs without inflating the main agent context.
 
-## Stack
+## Install from GitHub
 
-- `@earendil-works/pi-coding-agent` — extension API and `tool_result` interception.
-- `@juicesharp/rpiv-web-tools` — the web search/fetch tools being wrapped.
-- `@gotgenes/pi-subagents` — the subagent harness used for the locked-down research agent.
-- `@gotgenes/pi-subagents-worktrees` — runs the `WebResearch` agent in an isolated git worktree.
-- `@gotgenes/pi-permission-system` — centralized, deterministic permission gates (used alongside guardrails).
-- `@aliou/pi-guardrails` — kept as a fail-safe policy layer.
+The extension is a normal pi package. Install it like any other git package:
 
-## Project Layout
-
+```bash
+pi install git:github.com/YOUR_USER/pi-web-research-sandbox
 ```
-.pi/settings.json                   # project pi packages
-.pi/subagents-worktrees.json        # worktree isolation config
-.pi/agents/WebResearch.md              # locked-down subagent type
-.pi/extensions/web-research-sandbox.ts  # main extension entry
-src/sanitizer.ts                    # deterministic HTML -> JSON
-src/schema.ts                       # typebox output schema
-src/subagent.ts                     # subagent wrapper
+
+(Replace `YOUR_USER` with your GitHub username or organization.)
+
+### Required pi packages
+
+Your `~/.pi/agent/settings.json` must already include the packages this extension builds on:
+
+```json
+{
+  "packages": [
+    "npm:@juicesharp/rpiv-web-tools",
+    "npm:@gotgenes/pi-subagents",
+    "npm:@gotgenes/pi-subagents-worktrees"
+  ]
+}
 ```
+
+Optional fail-safes:
+
+- `npm:@aliou/pi-guardrails`
+- `npm:@gotgenes/pi-permission-system`
+
+### Agent files and worktree config
+
+A pi package ships its extension, not its agent markdown files or worktree config. After installing the extension, copy the files from `home.pi/` into your actual `~/.pi/` directory:
+
+```bash
+cp home.pi/agent/agents/*.md ~/.pi/agent/agents/
+cp home.pi/agent/subagents-worktrees.json ~/.pi/agent/
+```
+
+This registers:
+
+- `WebResearch` — the locked-down web research subagent.
+- `DocReader` — a cheap, read-only doc-search subagent.
 
 ## Development
 
-Run pi in this directory. The extension and agent type are auto-discovered from `.pi/`. Trust the project when prompted.
+Run pi in this directory. The extension is loaded from `package.json` and the local `.pi/` files are auto-discovered for development:
 
 ```bash
 cd /workspace/pi-web-research-sandbox
 pi
 ```
 
-See `PLAN.md` for the full implementation plan.
+Trust the project when prompted.
+
+## Project Layout
+
+```
+web-research-sandbox.ts            # main extension entry point
+src/
+  sanitizer.ts                     # deterministic HTML -> JSON
+  schema.ts                        # typebox output schema
+  policy.ts                        # high-risk URL detection
+  subagent.ts                      # subagent wrapper (stub)
+home.pi/agent/agents/WebResearch.md   # template for global agent install
+home.pi/agent/agents/DocReader.md     # template for global agent install
+home.pi/agent/subagents-worktrees.json # template for global worktree config
+.pi/                               # local development auto-discovery
+```
+
+## Tests
+
+```bash
+node test/sanitizer.test.ts
+```
+
+See `PLAN.md` for the full design.

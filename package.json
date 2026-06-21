@@ -4,10 +4,10 @@
   "description": "Sandboxed, structured web research for the pi coding agent.",
   "type": "module",
   "license": "MIT",
-  "private": true,
+  "keywords": ["pi-package"],
   "pi": {
     "extensions": [
-      "./.pi/extensions/web-research-sandbox.ts"
+      "./web-research-sandbox.ts"
     ]
   },
   "peerDependencies": {

@@ -1,7 +1,7 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { createHash } from "node:crypto";
-import { isHighRiskUrl } from "../../src/policy";
-import { sanitizeToJson } from "../../src/sanitizer";
+import { isHighRiskUrl } from "./src/policy";
+import { sanitizeToJson } from "./src/sanitizer";
 
 const RESEARCH_TOOLS = new Set(["web_fetch", "web_search"]);
 
