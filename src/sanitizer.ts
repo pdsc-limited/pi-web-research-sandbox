@@ -23,7 +23,7 @@ const INJECTION_MARKERS = [
   /override\s+(?:the\s+)?previous/gi,
 ];
 
-const ZERO_WIDTH_CHARS = /[\u200B-\u200F\u2060\uFEFF\u2028\u2029\u2061-\u2064]/g;
+const ZERO_WIDTH_CHARS = /[\u200B-\u200F\u2060\uFEFF\u2028\u2029\u2061-\u2064\u202A-\u202E]/g;
 
 const MAX_FACTS = 50;
 const MAX_SIGNATURES = 20;
@@ -56,6 +56,17 @@ function extractText(content: unknown): string {
   return JSON.stringify(content);
 }
 
+function decodeHtmlEntities(text: string): string {
+  return text
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, dec) => String.fromCodePoint(parseInt(dec, 10)));
+}
+
 function sanitizeText(text: string): string {
   // Parse as HTML so we can strip active elements and hidden subtrees. Plain
   // text is treated as a single text node, which is safe.
@@ -76,9 +87,12 @@ function sanitizeText(text: string): string {
     }
   });
 
-  let sanitized = $.text();
-
-  // Final HTML strip: keep only text, remove all tags and attributes.
+  // Serialize the cleaned DOM and replace all tags with spaces so that text
+  // from different block elements does not get concatenated. Decode HTML
+  // entities so that encoded tags become real tags and can be stripped by
+  // DOMPurify. DOMPurify then removes any remaining tags and keeps content.
+  let sanitized = $.html().replace(/<[^>]+>/g, " ");
+  sanitized = decodeHtmlEntities(sanitized);
   sanitized = DOMPurify.sanitize(sanitized, {
     ALLOWED_TAGS: [],
     ALLOWED_ATTR: [],
