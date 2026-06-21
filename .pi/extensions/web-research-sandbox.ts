@@ -1,7 +1,22 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { createHash } from "node:crypto";
+import { isHighRiskUrl } from "../../src/policy";
 import { sanitizeToJson } from "../../src/sanitizer";
 
 const RESEARCH_TOOLS = new Set(["web_fetch", "web_search"]);
+
+function highRiskFallbackJson(url: string): string {
+  return JSON.stringify({
+    source: url,
+    content_type: "unknown",
+    facts: [],
+    signatures: [],
+    versions: [],
+    rejected_fragments: [],
+    digest: "sha256:" + createHash("sha256").update(url).digest("hex"),
+    error: "High-risk URL. Use the WebResearch subagent to research this URL.",
+  });
+}
 
 function extractSource(event: any): string {
   if (event && typeof event.input === "object" && event.input !== null) {
@@ -24,6 +39,16 @@ export default function (pi: ExtensionAPI) {
     }
 
     const source = extractSource(event);
+
+    // For high-risk URLs, do not return the fetched content to the main agent.
+    // Instead, return a structured message telling the main agent to use the
+    // WebResearch subagent.
+    if (event.toolName === "web_fetch" && isHighRiskUrl(source)) {
+      return {
+        content: [{ type: "text", text: highRiskFallbackJson(source) }],
+      };
+    }
+
     const sanitized = sanitizeToJson(event.content, source);
 
     return {
