@@ -1,5 +1,5 @@
 import { Type, type Static } from "@sinclair/typebox";
-import { TypeCompiler } from "@sinclair/typebox/compiler";
+import { Value } from "@sinclair/typebox/value";
 
 export const ContentType = Type.Union([
   Type.Literal("api_documentation"),
@@ -24,12 +24,19 @@ export const ResearchOutputSchema = Type.Object(
 
 export type ResearchOutput = Static<typeof ResearchOutputSchema>;
 
-const compiled = TypeCompiler.Compile(ResearchOutputSchema);
-
 export function validateResearchOutput(value: unknown): value is ResearchOutput {
-  return compiled.Check(value);
+  return Value.Check(ResearchOutputSchema, value);
 }
 
 export function getResearchOutputErrors(value: unknown): string[] {
-  return [...compiled.Errors(value)].map((e) => `${e.path}: ${e.message}`);
+  return [...Value.Errors(ResearchOutputSchema, value)].map((e) => {
+    // The pi loader aliases @sinclair/typebox to the unscoped typebox
+    // package at runtime, whose error shape uses instancePath instead of path.
+    const path = "path" in e && typeof e.path === "string"
+      ? e.path
+      : "instancePath" in e && typeof e.instancePath === "string"
+        ? e.instancePath
+        : "?";
+    return `${path}: ${e.message}`;
+  });
 }
