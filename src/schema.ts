@@ -1,5 +1,5 @@
 import { Type, type Static } from "@sinclair/typebox";
-import { TypeCompiler } from "@sinclair/typebox/compiler";
+import { Compile } from "@sinclair/typebox/compile";
 
 export const ContentType = Type.Union([
   Type.Literal("api_documentation"),
@@ -16,7 +16,7 @@ export const ResearchOutputSchema = Type.Object(
     signatures: Type.Array(Type.String()),
     versions: Type.Array(Type.String()),
     rejected_fragments: Type.Array(Type.String()),
-    digest: Type.String(),
+    digest: Type.Optional(Type.String()),
     error: Type.Optional(Type.String()),
   },
   { additionalProperties: false },
@@ -24,7 +24,7 @@ export const ResearchOutputSchema = Type.Object(
 
 export type ResearchOutput = Static<typeof ResearchOutputSchema>;
 
-const compiled = TypeCompiler.Compile(ResearchOutputSchema);
+const compiled = Compile(ResearchOutputSchema);
 
 export function validateResearchOutput(value: unknown): value is ResearchOutput {
   return compiled.Check(value);
