@@ -9,7 +9,8 @@ By default, `rpiv-web-tools` returns raw web content as markdown directly into t
 This extension:
 
 - Intercepts `web_fetch` / `web_search` results and sanitizes them into rigid JSON before the main LLM sees them.
-- Flags high-risk URLs and tells the main agent to use the `WebResearch` subagent instead.
+- Routes high-risk URLs through the `WebResearch` subagent and returns its structured JSON artifact to the main agent.
+- Anchors the main agent to prefer `WebResearch` for all web research.
 - Provides a `WebResearch` subagent with only `web_search` and `web_fetch` tools, forced to return the same JSON schema.
 - Provides a lightweight `DocReader` subagent for searching local docs without inflating the main agent context.
 
@@ -36,6 +37,10 @@ Your `~/.pi/agent/settings.json` must already include the packages this extensio
   ]
 }
 ```
+
+Optional but recommended:
+
+- `npm:@gotgenes/pi-subagents-worktrees` — runs the `WebResearch` subagent in an isolated git worktree.
 
 Optional fail-safes:
 
@@ -75,7 +80,7 @@ src/
   sanitizer.ts                     # deterministic HTML -> JSON
   schema.ts                        # typebox output schema
   policy.ts                        # high-risk URL detection
-  subagent.ts                      # subagent wrapper (stub)
+  subagent.ts                      # WebResearch subagent wrapper
 home.pi/agent/agents/WebResearch.md   # template for global agent install
 home.pi/agent/agents/DocReader.md     # template for global agent install
 home.pi/agent/subagents-worktrees.json # template for global worktree config

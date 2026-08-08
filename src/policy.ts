@@ -1,7 +1,6 @@
 // High-risk URL policy for the web-research sandbox.
-// The extension cannot spawn subagents, so for high-risk URLs it blocks the
-// direct web_fetch result and returns a JSON message telling the main agent
-// to use the WebResearch subagent instead.
+// High-risk URLs are routed to the locked-down WebResearch subagent so that
+// raw web content never reaches the main agent.
 
 const SUSPICIOUS_HOSTS = new Set([
   "pastebin.com",

@@ -4,7 +4,9 @@
   "description": "Sandboxed, structured web research for the pi coding agent.",
   "type": "module",
   "license": "MIT",
-  "keywords": ["pi-package"],
+  "keywords": [
+    "pi-package"
+  ],
   "pi": {
     "extensions": [
       "./web-research-sandbox.ts"
@@ -12,7 +14,14 @@
   },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*",
-    "@earendil-works/pi-tui": "*"
+    "@earendil-works/pi-tui": "*",
+    "@gotgenes/pi-subagents": ">=17.0.0",
+    "@gotgenes/pi-subagents-worktrees": ">=0.2.0"
+  },
+  "peerDependenciesMeta": {
+    "@gotgenes/pi-subagents-worktrees": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@sinclair/typebox": "0.34.49",

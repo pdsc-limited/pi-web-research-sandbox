@@ -1,22 +1,9 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { createHash } from "node:crypto";
-import { isHighRiskUrl } from "./src/policy";
-import { sanitizeToJson } from "./src/sanitizer";
+import { isHighRiskUrl } from "./src/policy.ts";
+import { sanitizeToJson } from "./src/sanitizer.ts";
+import { spawnWebResearchSubagent } from "./src/subagent.ts";
 
 const RESEARCH_TOOLS = new Set(["web_fetch", "web_search"]);
-
-function highRiskFallbackJson(url: string): string {
-  return JSON.stringify({
-    source: url,
-    content_type: "unknown",
-    facts: [],
-    signatures: [],
-    versions: [],
-    rejected_fragments: [],
-    digest: "sha256:" + createHash("sha256").update(url).digest("hex"),
-    error: "High-risk URL. Use the WebResearch subagent to research this URL.",
-  });
-}
 
 function extractSource(event: any): string {
   if (event && typeof event.input === "object" && event.input !== null) {
@@ -30,22 +17,40 @@ function extractSource(event: any): string {
   return "unknown";
 }
 
+function safeJson(value: unknown): string {
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return JSON.stringify({
+      source: "unknown",
+      content_type: "unknown",
+      facts: [],
+      signatures: [],
+      versions: [],
+      rejected_fragments: [],
+      digest: "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      error: "Failed to serialize WebResearch result",
+    });
+  }
+}
+
 export default function (pi: ExtensionAPI) {
   // Intercept all web_fetch / web_search results and return rigid JSON.
   // The raw markdown/HTML never reaches the main LLM context.
-  pi.on("tool_result", async (event) => {
+  pi.on("tool_result", async (event, ctx) => {
     if (!RESEARCH_TOOLS.has(event.toolName)) {
       return;
     }
 
     const source = extractSource(event);
 
-    // For high-risk URLs, do not return the fetched content to the main agent.
-    // Instead, return a structured message telling the main agent to use the
-    // WebResearch subagent.
+    // High-risk URLs are routed to the locked-down WebResearch subagent.
+    // The subagent has no bash/write/edit tools and returns a structured JSON
+    // artifact, so untrusted web content never reaches the main agent.
     if (event.toolName === "web_fetch" && isHighRiskUrl(source)) {
+      const result = await spawnWebResearchSubagent(source, ctx.signal);
       return {
-        content: [{ type: "text", text: highRiskFallbackJson(source) }],
+        content: [{ type: "text", text: safeJson(result) }],
       };
     }
 
