@@ -1,4 +1,4 @@
-import { load } from "cheerio";
+import { parseHTML } from "linkedom";
 import DOMPurify from "isomorphic-dompurify";
 import { createHash } from "node:crypto";
 import {
@@ -69,29 +69,34 @@ function decodeHtmlEntities(text: string): string {
 
 function sanitizeText(text: string): string {
   // Parse as HTML so we can strip active elements and hidden subtrees. Plain
-  // text is treated as a single text node, which is safe.
-  const $ = load(text, { scriptingEnabled: false });
+  // text is treated as a single text node, which is safe. We use a wrapper
+  // <div> so fragments with multiple root elements are serialized fully.
+  const { document } = parseHTML("");
+  const root = document.createElement("div");
+  root.innerHTML = text;
 
-  $(
-    "script, style, noscript, iframe, object, embed, svg, canvas, template, link, meta, audio, video",
-  ).remove();
+  const activeOrHidden =
+    "script, style, noscript, iframe, object, embed, svg, canvas, template, link, meta, audio, video";
+  for (const el of root.querySelectorAll(activeOrHidden)) {
+    el.remove();
+  }
 
-  $("[hidden], [aria-hidden='true']").remove();
+  for (const el of root.querySelectorAll("[hidden], [aria-hidden='true']")) {
+    el.remove();
+  }
 
-  $("*").each((_i, el) => {
-    const $el = $(el);
-    const display = $el.css("display")?.toLowerCase() ?? "";
-    const visibility = $el.css("visibility")?.toLowerCase() ?? "";
-    if (display === "none" || visibility === "hidden") {
-      $el.remove();
+  for (const el of root.querySelectorAll("*")) {
+    const style = el.getAttribute("style")?.toLowerCase() ?? "";
+    if (style.includes("display:none") || style.includes("visibility:hidden")) {
+      el.remove();
     }
-  });
+  }
 
   // Serialize the cleaned DOM and replace all tags with spaces so that text
   // from different block elements does not get concatenated. Decode HTML
   // entities so that encoded tags become real tags and can be stripped by
   // DOMPurify. DOMPurify then removes any remaining tags and keeps content.
-  let sanitized = $.html().replace(/<[^>]+>/g, " ");
+  let sanitized = root.innerHTML.replace(/<[^>]+>/g, " ");
   sanitized = decodeHtmlEntities(sanitized);
   sanitized = DOMPurify.sanitize(sanitized, {
     ALLOWED_TAGS: [],
