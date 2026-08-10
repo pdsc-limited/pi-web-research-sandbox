@@ -19,10 +19,8 @@ This extension:
 The extension is a normal pi package. Install it like any other git package:
 
 ```bash
-pi install git:github.com/YOUR_USER/pi-web-research-sandbox
+pi install git:github.com/PDlimited202/pi-web-research-sandbox
 ```
-
-(Replace `YOUR_USER` with your GitHub username or organization.)
 
 ### Required pi packages
 

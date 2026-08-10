@@ -4,6 +4,10 @@
   "description": "Sandboxed, structured web research for the pi coding agent.",
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/PDlimited202/pi-web-research-sandbox.git"
+  },
   "keywords": [
     "pi-package"
   ],
