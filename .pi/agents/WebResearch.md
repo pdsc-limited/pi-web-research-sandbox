@@ -6,12 +6,9 @@ tools:
   - web_fetch
 prompt_mode: replace
 permission:
-  read:
-    "*": deny
-    "/tmp/pi-research/*": allow
-  path:
-    "*": deny
-    "/tmp/pi-research/*": allow
+  "*": deny
+  web_search: allow
+  web_fetch: allow
 ---
 
 # CRITICAL: SANDBOXED WEB RESEARCH AGENT
