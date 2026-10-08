@@ -19,6 +19,7 @@
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": ">=1.0.4",
     "@earendil-works/pi-tui": "*",
+    "@sinclair/typebox": "*",
     "@gotgenes/pi-subagents": ">=19.3.0",
     "@gotgenes/pi-subagents-worktrees": ">=0.2.0"
   },
@@ -28,8 +29,10 @@
     }
   },
   "dependencies": {
-    "@sinclair/typebox": "0.34.49",
     "isomorphic-dompurify": "^3.22.0",
     "linkedom": "^0.18.13"
+  },
+  "devDependencies": {
+    "@sinclair/typebox": "0.34.49"
   }
 }
