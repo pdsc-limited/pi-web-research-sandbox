@@ -17,7 +17,7 @@
     ]
   },
   "peerDependencies": {
-    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-coding-agent": ">=1.0.4",
     "@earendil-works/pi-tui": "*",
     "@gotgenes/pi-subagents": ">=19.3.0",
     "@gotgenes/pi-subagents-worktrees": ">=0.2.0"

@@ -5,6 +5,35 @@ import { isResearchTool, shouldBlockMainWebTool } from "./src/strict-main-web-to
 
 export { safeWebResultJson, transformWebToolResult } from "./src/web-result.ts";
 
+/**
+ * Redact a direct web-tool result, including Pi's machine-readable payload.
+ * `structuredContent` can retain raw MCP data even when `content` is replaced.
+ */
+export async function sanitizeWebToolResult(
+  event: { toolName: string },
+  signal?: AbortSignal,
+  transform: typeof transformWebToolResult = transformWebToolResult,
+) {
+  try {
+    if (!isResearchTool(event.toolName)) return;
+    return {
+      content: [{ type: "text" as const, text: await transform(event, signal) }],
+      // rpiv-web-tools stores raw search snippets/results in details. Clear
+      // them as well as replacing content so later extensions/session
+      // observers cannot recover untrusted web material from this result.
+      details: {},
+      structuredContent: undefined,
+    };
+  } catch {
+    // If event inspection itself fails, never allow its original content through.
+    return {
+      content: [{ type: "text" as const, text: safeWebResultJson() }],
+      details: {},
+      structuredContent: undefined,
+    };
+  }
+}
+
 export default function (pi: ExtensionAPI) {
   let strictMainWebTools = false;
 
@@ -35,21 +64,7 @@ export default function (pi: ExtensionAPI) {
 
   // Intercept all web_fetch / web_search results and return rigid JSON.
   // The raw markdown/HTML never reaches the main LLM context.
-  pi.on("tool_result", async (event, ctx) => {
-    try {
-      if (!isResearchTool(event.toolName)) return;
-      return {
-        content: [{ type: "text", text: await transformWebToolResult(event, ctx.signal) }],
-        // rpiv-web-tools stores raw search snippets/results in details. Clear
-        // them as well as replacing content so later extensions/session
-        // observers cannot recover untrusted web material from this result.
-        details: {},
-      };
-    } catch {
-      // If event inspection itself fails, never allow its original content through.
-      return { content: [{ type: "text", text: safeWebResultJson() }] };
-    }
-  });
+  pi.on("tool_result", (event, ctx) => sanitizeWebToolResult(event, ctx.signal));
 
   // Anchor the main agent whenever web research is in scope. This is defensive:
   // even if the JSON somehow contains an escaped injection, the main agent is
