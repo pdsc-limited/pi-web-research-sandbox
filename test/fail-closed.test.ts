@@ -2,6 +2,7 @@ import { validateResearchOutput, type ResearchOutput } from "../src/schema.ts";
 import { safeWebResultJson, transformWebToolResult } from "../src/web-result.ts";
 import { sanitizeResearchOutput } from "../src/sanitizer.ts";
 import { parseSubagentResult, waitForSubagent } from "../src/subagent.ts";
+import { sanitizeWebToolResult } from "../web-research-sandbox.ts";
 
 let passed = 0;
 let failed = 0;
@@ -112,6 +113,41 @@ const serializationFailure = await transformWebToolResult(
 );
 check(serializationFailure === safe, "artifact serialization failures fail closed");
 pass("web-result transformation failures");
+
+const redactedToolResult = await sanitizeWebToolResult(
+  { toolName: "web_search" },
+  undefined,
+  async () => '{"source":"unknown"}',
+);
+check(redactedToolResult !== undefined, "research result is replaced");
+check(
+  redactedToolResult !== undefined &&
+    Object.hasOwn(redactedToolResult, "structuredContent") &&
+    redactedToolResult.structuredContent === undefined,
+  "redacted result explicitly clears structured content",
+);
+check(
+  redactedToolResult !== undefined && JSON.stringify(redactedToolResult.details) === "{}",
+  "redacted result clears details",
+);
+
+const fallbackToolResult = await sanitizeWebToolResult(
+  { toolName: "web_fetch" },
+  undefined,
+  async () => { throw new Error("raw-secret"); },
+);
+check(fallbackToolResult !== undefined, "fallback result is returned");
+check(
+  fallbackToolResult !== undefined &&
+    Object.hasOwn(fallbackToolResult, "structuredContent") &&
+    fallbackToolResult.structuredContent === undefined,
+  "fallback explicitly clears structured content",
+);
+check(
+  fallbackToolResult !== undefined && fallbackToolResult.content[0]?.text === safe,
+  "fallback result uses fixed safe artifact",
+);
+pass("tool-result structured-content redaction");
 
 check(parseSubagentResult("not json", "https://example.test") === undefined, "invalid child JSON is rejected");
 const parsed = parseSubagentResult(JSON.stringify({ ...base, digest: "sha256:untrusted" }), "https://example.test");
